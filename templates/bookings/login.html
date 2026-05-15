@@ -23,7 +23,7 @@
         <input type="hidden" name="next" value="{% url 'barber_dashboard' %}" />
       {% endif %}
 
-      {% if form.errors %}
+      {% if error or form.errors %}
       <div class="message message-error" style="margin-bottom: 1.5rem; position: relative; max-width: 100%;">
         <span class="material-icons-round">error</span>
         <span>Invalid username or password. Please try again.</span>
@@ -37,7 +37,7 @@
       
       <div class="form-group" style="margin-bottom: 2rem;">
         <label class="form-label" for="id_password">Password</label>
-        <input type="password" name="password" class="form-input" id="id_password" placeholder="••••••••" required />
+        <input type="password" name="password" class="form-input" id="id_password" placeholder="••••••••" />
       </div>
 
       <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;">
