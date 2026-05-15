@@ -276,4 +276,30 @@ textarea.form-input{resize:vertical}
   .nav-link{padding:.9rem 0;border-bottom:1px solid var(--border)}
   .hamburger{display:flex}
   .nav-cta{display:none}
+  .booking-wizard { padding: 5rem 1rem 2rem; }
+  .booking-panel { padding: 1.5rem; }
+  .panel-actions {
+    flex-direction: column-reverse;
+    gap: 0.8rem;
+  }
+  .panel-actions .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.8rem 1rem;
+  }
+  .wizard-steps { margin-bottom: 2rem; }
+  .wizard-step {
+    padding: 0.5rem;
+    font-size: 0;
+  }
+  .wizard-step span {
+    font-size: 1.3rem;
+  }
+  .step-sep { width: 1rem; }
+  .choice-list { grid-template-columns: 1fr !important; }
+  .date-input { max-width: 100%; width: 100%; }
+  .slots-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .slot-btn { padding: 0.7rem; font-size: 0.95rem; }
+  .booking-summary { padding: 1rem; }
+  .success-card { padding: 2rem 1.2rem; }
 }
