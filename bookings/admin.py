@@ -1,6 +1,13 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Service, Barber, TimeSlot, Appointment
+from .models import Service, Barber, TimeSlot, Appointment, Shop
+
+
+@admin.register(Shop)
+class ShopAdmin(admin.ModelAdmin):
+    list_display = ('name', 'city', 'phone', 'is_active')
+    search_fields = ('name', 'city')
+    list_filter = ('is_active',)
 
 
 @admin.register(Service)
