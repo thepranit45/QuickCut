@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Barber Login — QuickCut{% endblock %}
+
+{% block content %}
+<div class="page-section" style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 6rem 2rem;">
+  <div class="success-card" style="max-width: 420px; width: 100%; text-align: center; padding: 3rem 2rem;">
+    
+    <div class="success-icon" style="margin-bottom: 2rem;">
+      <div class="checkmark-circle" style="background: linear-gradient(135deg, var(--accent), var(--accent2));">
+        <span class="material-icons-round" style="color: #000;">storefront</span>
+      </div>
+    </div>
+    
+    <h1 class="success-title" style="font-size: 1.8rem;">Barber Login</h1>
+    <p class="success-subtitle" style="margin-bottom: 2.5rem;">Access your dashboard to manage appointments.</p>
+    
+    <form method="post" action="{% url 'login' %}" style="text-align: left;">
+      {% csrf_token %}
+      {% if next %}
+        <input type="hidden" name="next" value="{{ next }}" />
+      {% else %}
+        <input type="hidden" name="next" value="{% url 'barber_dashboard' %}" />
+      {% endif %}
+
+      {% if form.errors %}
+      <div class="message message-error" style="margin-bottom: 1.5rem; position: relative; max-width: 100%;">
+        <span class="material-icons-round">error</span>
+        <span>Invalid username or password. Please try again.</span>
+      </div>
+      {% endif %}
+
+      <div class="form-group" style="margin-bottom: 1.2rem;">
+        <label class="form-label" for="id_username">Username</label>
+        <input type="text" name="username" class="form-input" id="id_username" placeholder="e.g. arjunsharma" required autofocus />
+      </div>
+      
+      <div class="form-group" style="margin-bottom: 2rem;">
+        <label class="form-label" for="id_password">Password</label>
+        <input type="password" name="password" class="form-input" id="id_password" placeholder="••••••••" required />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;">
+        <span class="material-icons-round">login</span> Secure Login
+      </button>
+    </form>
+    
+    <p style="color: var(--muted); font-size: 0.85rem; margin-top: 2rem;">
+      Authorized personnel only. Contact your shop admin if you forgot your credentials.
+    </p>
+  </div>
+</div>
+{% endblock %}

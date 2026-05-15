@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Slots — QuickCut{% endblock %}
+
+{% block content %}
+<div class="page-section" style="padding: 6rem 2rem; max-width: 900px; margin: 0 auto; min-height: 100vh;">
+  
+  <div class="dashboard-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h1 class="dash-title" style="font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 0.5rem;">Manage Time Slots</h1>
+      <p class="dash-subtitle" style="color: var(--muted); font-size: 1.1rem;">Block or generate slots for {{ barber.shop.name }}</p>
+    </div>
+    <a href="{% url 'barber_dashboard' %}" class="btn btn-ghost"><span class="material-icons-round">arrow_back</span> Back to Dashboard</a>
+  </div>
+
+  <div class="dash-card" style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; margin-bottom: 2rem;">
+    <form method="get" action="{% url 'shop_slots' %}" style="display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap;">
+      
+      <div style="flex: 1; min-width: 200px;">
+        <label class="form-label" style="display: block; margin-bottom: 0.5rem; color: var(--muted); font-weight: 600;">Select Barber</label>
+        <select name="barber_id" class="form-input" style="width: 100%;" onchange="this.form.submit()">
+          <option value="">-- Choose a Barber --</option>
+          {% for b in barbers %}
+            <option value="{{ b.id }}" {% if selected_barber and selected_barber.id == b.id %}selected{% endif %}>{{ b.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="flex: 1; min-width: 200px;">
+        <label class="form-label" style="display: block; margin-bottom: 0.5rem; color: var(--muted); font-weight: 600;">Select Date</label>
+        <input type="date" name="date" class="form-input" style="width: 100%;" value="{{ selected_date }}" onchange="this.form.submit()" />
+      </div>
+
+    </form>
+  </div>
+
+  {% if selected_barber %}
+  <div class="dash-card" style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.2rem;">Slots for {{ selected_barber.name }} on {{ selected_date }}</h3>
+      
+      {% if not slots %}
+      <form method="post" action="{% url 'shop_slots' %}?barber_id={{ selected_barber.id }}&date={{ selected_date }}" style="margin: 0;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="generate" />
+        <button type="submit" class="btn btn-primary btn-sm">
+          <span class="material-icons-round">add_circle</span> Generate 9AM-8PM
+        </button>
+      </form>
+      {% endif %}
+    </div>
+
+    {% if slots %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+      {% for item in slots %}
+        <div style="padding: 1rem; border-radius: 10px; border: 1px solid var(--border); 
+             {% if item.appointment %}background: rgba(212,175,55,0.05); border-color: var(--accent);
+             {% elif item.slot.is_booked %}background: rgba(239,68,68,0.05); border-color: var(--danger);
+             {% else %}background: var(--bg3);{% endif %} text-align: center;">
+          
+          <h4 style="margin-bottom: 0.5rem; font-size: 1.1rem;">{{ item.slot.start_time|time:"h:i A" }}</h4>
+          
+          {% if item.appointment %}
+            <p style="color: var(--accent); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">
+              Booked: {{ item.appointment.customer_name|truncatechars:15 }}
+            </p>
+          {% else %}
+            <form method="post" action="{% url 'shop_slots' %}?barber_id={{ selected_barber.id }}&date={{ selected_date }}" style="margin: 0;">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="toggle_block" />
+              <input type="hidden" name="slot_id" value="{{ item.slot.id }}" />
+              {% if item.slot.is_booked %}
+                <button type="submit" class="btn btn-outline btn-sm" style="width: 100%; border-color: var(--danger); color: var(--danger);">Unblock</button>
+              {% else %}
+                <button type="submit" class="btn btn-ghost btn-sm" style="width: 100%;">Block Slot</button>
+              {% endif %}
+            </form>
+          {% endif %}
+          
+        </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem 1rem; color: var(--muted); background: var(--bg3); border-radius: 12px;">
+      <span class="material-icons-round" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">event_busy</span>
+      <p>No slots generated for this day.</p>
+    </div>
+    {% endif %}
+
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}QuickCut — Premium Barber Shop in Mumbai{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero Section ───────────────────────────────────────────── -->
+<section class="hero" id="hero">
+  <div class="hero-bg">
+    <div class="hero-gradient"></div>
+    <div class="hero-grid"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="material-icons-round">star</span>
+      Premium Barber Experience
+    </div>
+    <h1 class="hero-title">
+      Look Sharp.<br/>
+      <span class="gradient-text">Feel Confident.</span>
+    </h1>
+    <p class="hero-subtitle">
+      Expert cuts, precision shaves, and grooming tailored to you.<br/>
+      Book your slot in under 60 seconds.
+    </p>
+    <div class="hero-actions">
+      <a href="{% url 'book' %}" class="btn btn-primary btn-lg" id="heroBookBtn">
+        <span class="material-icons-round">event_available</span>
+        Book Appointment
+      </a>
+      <a href="{% url 'services' %}" class="btn btn-ghost btn-lg">
+        <span class="material-icons-round">content_cut</span>
+        View Services
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-number">500+</span>
+        <span class="stat-label">Happy Clients</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-number">3</span>
+        <span class="stat-label">Expert Barbers</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-number">4.9★</span>
+        <span class="stat-label">Avg Rating</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-image">
+    <div class="hero-card floating">
+      <span class="material-icons-round hero-icon">content_cut</span>
+    </div>
+    <div class="hero-ring ring-1"></div>
+    <div class="hero-ring ring-2"></div>
+    <div class="hero-ring ring-3"></div>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll down</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ── Services Section ───────────────────────────────────────── -->
+<section class="section" id="services-section">
+  <div class="section-container">
+    <div class="section-header">
+      <span class="section-tag">What We Do</span>
+      <h2 class="section-title">Our Services</h2>
+      <p class="section-subtitle">From classic cuts to modern styles — we've got you covered.</p>
+    </div>
+    <div class="services-grid">
+      {% for service in services %}
+      <div class="service-card" style="animation-delay: {{ forloop.counter0 }}00ms">
+        <div class="service-icon-wrap">
+          <span class="material-icons-round service-icon">{{ service.icon }}</span>
+        </div>
+        <h3 class="service-name">{{ service.name }}</h3>
+        <p class="service-desc">{{ service.description }}</p>
+        <div class="service-meta">
+          <span class="service-duration">
+            <span class="material-icons-round">schedule</span>
+            {{ service.duration_minutes }} min
+          </span>
+          <span class="service-price">₹{{ service.price }}</span>
+        </div>
+        <a href="{% url 'book' %}" class="btn btn-outline btn-sm">Book This</a>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="section-cta">
+      <a href="{% url 'services' %}" class="btn btn-ghost">View All Services</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── How It Works ───────────────────────────────────────────── -->
+<section class="section section-dark" id="how-it-works">
+  <div class="section-container">
+    <div class="section-header">
+      <span class="section-tag">Simple &amp; Fast</span>
+      <h2 class="section-title">How It Works</h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">01</div>
+        <div class="step-icon"><span class="material-icons-round">spa</span></div>
+        <h3>Choose a Service</h3>
+        <p>Pick from our range of premium grooming services.</p>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-card">
+        <div class="step-number">02</div>
+        <div class="step-icon"><span class="material-icons-round">person</span></div>
+        <h3>Select a Barber</h3>
+        <p>Choose your preferred stylist based on expertise.</p>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-card">
+        <div class="step-number">03</div>
+        <div class="step-icon"><span class="material-icons-round">calendar_today</span></div>
+        <h3>Pick a Slot</h3>
+        <p>Select a date and available time slot that suits you.</p>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-card">
+        <div class="step-number">04</div>
+        <div class="step-icon"><span class="material-icons-round">check_circle</span></div>
+        <h3>Confirm &amp; Arrive</h3>
+        <p>Get your confirmation and walk in at your time.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Team Preview ───────────────────────────────────────────── -->
+<section class="section" id="team-section">
+  <div class="section-container">
+    <div class="section-header">
+      <span class="section-tag">The Crew</span>
+      <h2 class="section-title">Meet Our Barbers</h2>
+      <p class="section-subtitle">Skilled artisans with passion for their craft.</p>
+    </div>
+    <div class="barbers-grid">
+      {% for barber in barbers %}
+      <div class="barber-card">
+        <div class="barber-avatar">
+          {% if barber.photo %}
+            <img src="{{ barber.photo.url }}" alt="{{ barber.name }}" />
+          {% else %}
+            <div class="avatar-placeholder">{{ barber.name|first }}</div>
+          {% endif %}
+          <div class="barber-badge">{{ barber.rating }}★</div>
+        </div>
+        <div class="barber-info">
+          <h3 class="barber-name">{{ barber.name }}</h3>
+          <span class="barber-specialty">{{ barber.speciality }}</span>
+          <p class="barber-bio">{{ barber.bio }}</p>
+          <div class="barber-meta">
+            <span><span class="material-icons-round">workspace_premium</span> {{ barber.experience_years }} yrs exp.</span>
+          </div>
+        </div>
+        <a href="{% url 'book' %}" class="btn btn-primary btn-sm">Book with {{ barber.name|truncatechars:10 }}</a>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="section-cta">
+      <a href="{% url 'team' %}" class="btn btn-ghost">Meet the Full Team</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA Banner ─────────────────────────────────────────────── -->
+<section class="cta-banner">
+  <div class="cta-content">
+    <h2>Ready for a fresh look?</h2>
+    <p>Don't let a tired barber ruin your style. Book your slot now and walk in relaxed.</p>
+    <a href="{% url 'book' %}" class="btn btn-primary btn-lg" id="ctaBookBtn">
+      <span class="material-icons-round">event_available</span>
+      Book Appointment Now
+    </a>
+  </div>
+</section>
+
+{% endblock %}

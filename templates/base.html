@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}24K Hair Studio — Premium Grooming{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Book your next appointment at 24K Hair Studio — the premium grooming experience.{% endblock %}" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────────── -->
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="{% url 'home' %}" class="nav-logo">
+      <span class="logo-icon">✂</span>
+      <span class="logo-text">24K<span class="logo-accent">Studio</span></span>
+    </a>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
+      <li><a href="{% url 'services' %}" class="nav-link {% if request.resolver_match.url_name == 'services' %}active{% endif %}">Services</a></li>
+      <li><a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">Our Team</a></li>
+      <li><a href="{% url 'my_appointments' %}" class="nav-link {% if request.resolver_match.url_name == 'my_appointments' %}active{% endif %}">My Bookings</a></li>
+    </ul>
+
+    <a href="{% url 'book' %}" class="btn btn-primary nav-cta">
+      <span class="material-icons-round">event_available</span>
+      Book Now
+    </a>
+
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ── Flash Messages ──────────────────────────────────────────── -->
+{% if messages %}
+<div class="messages-container" id="messagesContainer">
+  {% for msg in messages %}
+  <div class="message message-{{ msg.tags }}" role="alert">
+    <span class="material-icons-round">
+      {% if msg.tags == 'success' %}check_circle{% elif msg.tags == 'error' %}error{% else %}info{% endif %}
+    </span>
+    <span>{{ msg }}</span>
+    <button class="msg-close" onclick="this.parentElement.remove()" aria-label="Close">✕</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── Main Content ────────────────────────────────────────────── -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ── Footer ─────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-brand">
+      <span class="logo-icon">✂</span>
+      <span class="logo-text">24K<span class="logo-accent">Studio</span></span>
+      <p class="footer-tagline">Where precision meets style.</p>
+    </div>
+    <div class="footer-links">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="{% url 'home' %}">Home</a></li>
+        <li><a href="{% url 'services' %}">Services</a></li>
+        <li><a href="{% url 'team' %}">Our Team</a></li>
+        <li><a href="{% url 'book' %}">Book Appointment</a></li>
+        <li><a href="{% url 'login' %}">Barber Login</a></li>
+      </ul>
+    </div>
+    <div class="footer-contact">
+      <h4>Visit Us</h4>
+      <p><span class="material-icons-round">location_on</span> 42 Barber Lane, Mumbai 400001</p>
+      <p><span class="material-icons-round">phone</span> +91 9209597436</p>
+      <p><span class="material-icons-round">schedule</span> Mon–Sat: 9 AM – 8 PM</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2026 24K Hair Studio. All rights reserved. Built with ✂ &amp; ❤</p>
+  </div>
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Services — QuickCut{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <span class="section-tag">Menu</span>
+  <h1 class="page-hero-title">Our Services</h1>
+  <p class="page-hero-sub">Premium grooming, priced fairly.</p>
+</div>
+
+<div class="page-section">
+  <div class="section-container">
+    <div class="services-grid large">
+      {% for service in services %}
+      <div class="service-card large-card">
+        <div class="service-icon-wrap">
+          <span class="material-icons-round service-icon">{{ service.icon }}</span>
+        </div>
+        <div class="service-body">
+          <h2 class="service-name">{{ service.name }}</h2>
+          <p class="service-desc">{{ service.description }}</p>
+          <div class="service-meta">
+            <span class="service-duration">
+              <span class="material-icons-round">schedule</span>
+              {{ service.duration_minutes }} min
+            </span>
+            <span class="service-price">₹{{ service.price }}</span>
+          </div>
+        </div>
+        <a href="{% url 'book' %}" class="btn btn-primary btn-sm">
+          <span class="material-icons-round">event_available</span> Book
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

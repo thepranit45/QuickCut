@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings — QuickCut{% endblock %}
+
+{% block content %}
+<div class="page-section">
+  <div class="section-container" style="max-width: 860px;">
+    <div class="section-header">
+      <span class="section-tag">Reservation History</span>
+      <h1 class="section-title">My Appointments</h1>
+      <p class="section-subtitle">Enter your email or phone to look up your bookings.</p>
+    </div>
+
+    <!-- Search Form -->
+    <form method="get" class="lookup-form" id="lookupForm">
+      <div class="lookup-inputs">
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input type="email" name="email" id="email" class="form-input"
+                 placeholder="your@email.com" value="{{ email }}" />
+        </div>
+        <div class="lookup-or">or</div>
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone Number</label>
+          <input type="tel" name="phone" id="phone" class="form-input"
+                 placeholder="+91 98765 43210" value="{{ phone }}" />
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <span class="material-icons-round">search</span> Find Bookings
+      </button>
+    </form>
+
+    <!-- Results -->
+    {% if searched %}
+      {% if appointments %}
+        <div class="appointments-list" id="appointmentsList">
+          {% for appt in appointments %}
+          <div class="appt-card status-{{ appt.status }}">
+            <div class="appt-header">
+              <div class="appt-service-info">
+                <h3 class="appt-service">{{ appt.service.name }}</h3>
+                <span class="appt-barber">with {{ appt.barber.name }}</span>
+              </div>
+              <div class="status-pill {{ appt.status }}">
+                {% if appt.status == 'confirmed' %}<span class="material-icons-round">verified</span>
+                {% elif appt.status == 'cancelled' %}<span class="material-icons-round">cancel</span>
+                {% elif appt.status == 'completed' %}<span class="material-icons-round">task_alt</span>
+                {% else %}<span class="material-icons-round">hourglass_top</span>{% endif %}
+                {{ appt.get_status_display }}
+              </div>
+            </div>
+            <div class="appt-meta">
+              <span><span class="material-icons-round">calendar_today</span> {{ appt.slot.date|date:"D, d M Y" }}</span>
+              <span><span class="material-icons-round">schedule</span> {{ appt.slot.start_time|time:"h:i A" }}</span>
+              <span><span class="material-icons-round">payments</span> ₹{{ appt.service.price }}</span>
+            </div>
+            {% if appt.status == 'confirmed' %}
+            <div class="appt-actions">
+              <a href="{% url 'cancel_appointment' appt.pk %}" class="btn btn-danger btn-sm">
+                <span class="material-icons-round">cancel</span> Cancel
+              </a>
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <span class="material-icons-round empty-icon">event_busy</span>
+          <h3>No appointments found</h3>
+          <p>We couldn't find any bookings with that email or phone.</p>
+          <a href="{% url 'book' %}" class="btn btn-primary">Book Now</a>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Our Team — QuickCut{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <span class="section-tag">The Crew</span>
+  <h1 class="page-hero-title">Meet Our Barbers</h1>
+  <p class="page-hero-sub">Masters of their craft, dedicated to your style.</p>
+</div>
+
+<div class="page-section">
+  <div class="section-container">
+    <div class="team-grid">
+      {% for barber in barbers %}
+      <div class="barber-card large">
+        <div class="barber-avatar large-avatar">
+          {% if barber.photo %}
+            <img src="{{ barber.photo.url }}" alt="{{ barber.name }}" />
+          {% else %}
+            <div class="avatar-placeholder large">{{ barber.name|first }}</div>
+          {% endif %}
+          <div class="barber-badge">{{ barber.rating }}★</div>
+        </div>
+        <div class="barber-info">
+          <h2 class="barber-name">{{ barber.name }}</h2>
+          <span class="barber-specialty">{{ barber.speciality }}</span>
+          <p class="barber-bio">{{ barber.bio }}</p>
+          <div class="barber-meta">
+            <span>
+              <span class="material-icons-round">workspace_premium</span>
+              {{ barber.experience_years }} years of experience
+            </span>
+            <span>
+              <span class="material-icons-round">star</span>
+              {{ barber.rating }} / 5.0 rating
+            </span>
+          </div>
+        </div>
+        <a href="{% url 'book' %}" class="btn btn-primary">
+          <span class="material-icons-round">event_available</span>
+          Book with {{ barber.name|truncatechars:12 }}
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

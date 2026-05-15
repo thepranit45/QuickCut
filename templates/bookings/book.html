@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Book Appointment — QuickCut{% endblock %}
+
+{% block extra_css %}
+<style>
+  .booking-wizard { padding: 6rem 1.5rem 4rem; min-height: 100vh; }
+  .wizard-steps { display: flex; justify-content: center; gap: 0; margin-bottom: 3rem; }
+  .wizard-step { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.5rem;
+    border-radius: 99px; font-size: 0.85rem; font-weight: 600; color: var(--muted);
+    border: 2px solid transparent; transition: all .3s ease; }
+  .wizard-step.active { color: var(--accent); border-color: var(--accent); background: rgba(212,175,55,0.08); }
+  .wizard-step.done { color: var(--success); border-color: var(--success); background: rgba(16,185,129,0.08); }
+  .wizard-step span { font-size: 1rem; }
+  .step-sep { width: 2rem; height: 2px; background: var(--border); align-self: center; margin: 0 -0.5rem; }
+  .slot-btn.unavailable { opacity: 0.4; cursor: not-allowed; background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05); color: var(--muted); text-decoration: line-through; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="booking-wizard">
+  <div class="section-header" style="margin-bottom:2rem;">
+    <span class="section-tag">Reservation</span>
+    <h1 class="section-title">Book Your Slot</h1>
+    <p class="section-subtitle">Takes less than a minute. No account needed.</p>
+  </div>
+
+  <!-- Step indicator -->
+  <div class="wizard-steps" id="wizardSteps">
+    <div class="wizard-step active" id="step1Indicator">
+      <span class="material-icons-round">storefront</span> Shop, Service &amp; Barber
+    </div>
+    <div class="step-sep"></div>
+    <div class="wizard-step" id="step2Indicator">
+      <span class="material-icons-round">calendar_today</span> Pick a Slot
+    </div>
+    <div class="step-sep"></div>
+    <div class="wizard-step" id="step3Indicator">
+      <span class="material-icons-round">person</span> Your Details
+    </div>
+  </div>
+
+  <!-- ── Step 1: Service + Barber ── -->
+  <div class="booking-panel" id="panelStep1">
+    <h2 class="panel-title">Choose Your Shop, Service &amp; Barber</h2>
+
+    <!-- Shops -->
+    <div style="margin-bottom: 2rem;">
+      <p class="choice-label"><span class="material-icons-round">storefront</span> Select Shop</p>
+      <div class="choice-list" id="shopList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; max-height: none;">
+        {% for shop in shops %}
+        <div class="choice-item shop-item" data-id="{{ shop.id }}">
+          <div class="choice-item-left">
+            <span class="material-icons-round">storefront</span>
+            <div>
+              <strong>{{ shop.name }}</strong>
+              <small>{{ shop.address }}</small>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div id="serviceBarberGrid" style="display: none; flex-direction: column; gap: 2.5rem;">
+      <!-- Services -->
+      <div id="serviceSection">
+        <p class="choice-label"><span class="material-icons-round">spa</span> Select Service</p>
+        <div class="choice-list" id="serviceList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; max-height: none; overflow: visible;">
+          {% for service in services %}
+          <div class="choice-item" data-id="{{ service.id }}" data-type="service" id="service-{{ service.id }}">
+            <div class="choice-item-left">
+              <span class="material-icons-round">{{ service.icon }}</span>
+              <div>
+                <strong>{{ service.name }}</strong>
+                <small>{{ service.duration_minutes }} min</small>
+              </div>
+            </div>
+            <span class="choice-price">₹{{ service.price }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <!-- Barbers -->
+      <div id="barberSection" style="display: none;">
+        <p class="choice-label"><span class="material-icons-round">person</span> Select Barber</p>
+        <div class="choice-list" id="barberList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; max-height: none; overflow: visible;">
+          {% for barber in barbers %}
+          <div class="choice-item barber-item" data-id="{{ barber.id }}" data-type="barber" data-shop-id="{{ barber.shop_id }}" id="barber-{{ barber.id }}">
+            <div class="choice-item-left">
+              <div class="mini-avatar">{{ barber.name|first }}</div>
+              <div>
+                <strong>{{ barber.name }}</strong>
+                <small>{{ barber.speciality }}</small>
+              </div>
+            </div>
+            <span class="choice-badge">{{ barber.rating }}★</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="panel-actions">
+      <button class="btn btn-primary btn-lg" id="toStep2Btn" disabled>
+        Next: Pick a Slot <span class="material-icons-round">arrow_forward</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Step 2: Date + Slot ── -->
+  <div class="booking-panel hidden" id="panelStep2">
+    <h2 class="panel-title">Select Date &amp; Time Slot</h2>
+    <div class="date-row">
+      <label class="choice-label" for="datePicker">
+        <span class="material-icons-round">calendar_today</span> Choose Date
+      </label>
+      <input type="date" id="datePicker" class="form-input date-input"
+             min="{{ today_iso }}" />
+    </div>
+    <div id="slotsSection" class="slots-section hidden">
+      <p class="choice-label"><span class="material-icons-round">schedule</span> Available Slots</p>
+      <div class="slots-grid" id="slotsGrid"></div>
+      <p class="no-slots hidden" id="noSlots">No available slots for this date. Try another day! 📅</p>
+    </div>
+    <div class="panel-actions">
+      <button class="btn btn-ghost" id="backToStep1Btn">
+        <span class="material-icons-round">arrow_back</span> Back
+      </button>
+      <button class="btn btn-primary btn-lg" id="toStep3Btn" disabled>
+        Next: Your Details <span class="material-icons-round">arrow_forward</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Step 3: Customer Details ── -->
+  <div class="booking-panel hidden" id="panelStep3">
+    <h2 class="panel-title">Your Details</h2>
+
+    <!-- Summary card -->
+    <div class="booking-summary" id="bookingSummary">
+      <div class="summary-item">
+        <span class="material-icons-round">storefront</span>
+        <span id="summaryShop">—</span>
+      </div>
+      <div class="summary-item">
+        <span class="material-icons-round">spa</span>
+        <span id="summaryService">—</span>
+      </div>
+      <div class="summary-item">
+        <span class="material-icons-round">person</span>
+        <span id="summaryBarber">—</span>
+      </div>
+      <div class="summary-item">
+        <span class="material-icons-round">schedule</span>
+        <span id="summarySlot">—</span>
+      </div>
+      <div class="summary-item summary-price">
+        <span class="material-icons-round">payments</span>
+        <span id="summaryPrice">—</span>
+      </div>
+    </div>
+
+    <form method="post" action="{% url 'confirm_booking' %}" id="bookingForm">
+      {% csrf_token %}
+      <input type="hidden" name="slot_id" id="hiddenSlotId" />
+      <input type="hidden" name="service_id" id="hiddenServiceId" />
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="id_customer_name">Full Name *</label>
+          <input type="text" name="customer_name" class="form-input" id="id_customer_name"
+                 placeholder="Your full name" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="id_customer_phone">Phone Number *</label>
+          <input type="tel" name="customer_phone" class="form-input" id="id_customer_phone"
+                 placeholder="+91 98765 43210" required />
+        </div>
+        <div class="form-group form-group-full">
+          <label class="form-label" for="id_customer_email">Email Address *</label>
+          <input type="email" name="customer_email" class="form-input" id="id_customer_email"
+                 placeholder="your@email.com" required />
+        </div>
+        <div class="form-group form-group-full">
+          <label class="form-label" for="id_notes">Special Requests (optional)</label>
+          <textarea name="notes" class="form-input" id="id_notes" rows="3"
+                    placeholder="Any specific style, allergies, or requests..."></textarea>
+        </div>
+      </div>
+
+      <div class="panel-actions">
+        <button type="button" class="btn btn-ghost" id="backToStep2Btn">
+          <span class="material-icons-round">arrow_back</span> Back
+        </button>
+        <button type="submit" class="btn btn-primary btn-lg" id="confirmBtn">
+          <span class="material-icons-round">event_available</span>
+          Confirm Appointment
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const SLOTS_URL = "{% url 'get_slots' %}";
+
+// ── State ──────────────────────────────────────────────────────
+const state = {
+  selectedShopId: null,
+  selectedShopName: null,
+  selectedServiceId: null,
+  selectedServiceName: null,
+  selectedServicePrice: null,
+  selectedBarberId: null,
+  selectedBarberName: null,
+  selectedSlotId: null,
+  selectedSlotLabel: null,
+};
+
+// ── Step 1: Service & Barber selection ─────────────────────────
+
+document.querySelectorAll('#shopList .choice-item').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('#shopList .choice-item').forEach(i => i.classList.remove('selected'));
+    el.classList.add('selected');
+    state.selectedShopId = el.dataset.id;
+    state.selectedShopName = el.querySelector('strong').textContent;
+    
+    // Show grid
+    document.getElementById('serviceBarberGrid').style.display = 'flex';
+
+    // Filter barbers
+    document.querySelectorAll('.barber-item').forEach(barberEl => {
+      if (barberEl.dataset.shopId === state.selectedShopId) {
+        barberEl.style.display = 'flex';
+      } else {
+        barberEl.style.display = 'none';
+        barberEl.classList.remove('selected');
+      }
+    });
+
+    // Reset barber selection
+    state.selectedBarberId = null;
+    state.selectedBarberName = null;
+    checkStep1();
+  });
+});
+document.querySelectorAll('#serviceList .choice-item').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('#serviceList .choice-item').forEach(i => i.classList.remove('selected'));
+    el.classList.add('selected');
+    state.selectedServiceId = el.dataset.id;
+    state.selectedServiceName = el.querySelector('strong').textContent;
+    state.selectedServicePrice = el.querySelector('.choice-price').textContent;
+    
+    // Show barbers
+    document.getElementById('barberSection').style.display = 'block';
+    
+    checkStep1();
+  });
+});
+
+document.querySelectorAll('#barberList .choice-item').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('#barberList .choice-item').forEach(i => i.classList.remove('selected'));
+    el.classList.add('selected');
+    state.selectedBarberId = el.dataset.id;
+    state.selectedBarberName = el.querySelector('strong').textContent;
+    checkStep1();
+  });
+});
+
+function checkStep1() {
+  const btn = document.getElementById('toStep2Btn');
+  btn.disabled = !(state.selectedServiceId && state.selectedBarberId);
+}
+
+document.getElementById('toStep2Btn').addEventListener('click', () => {
+  goToStep(2);
+});
+
+// ── Step 2: Date + Slot ────────────────────────────────────────
+const datePicker = document.getElementById('datePicker');
+const today = new Date().toISOString().split('T')[0];
+datePicker.min = today;
+datePicker.value = '';
+
+datePicker.addEventListener('change', fetchSlots);
+
+async function fetchSlots() {
+  const date = datePicker.value;
+  if (!date || !state.selectedBarberId) return;
+
+  const slotsSection = document.getElementById('slotsSection');
+  const slotsGrid = document.getElementById('slotsGrid');
+  const noSlots = document.getElementById('noSlots');
+
+  slotsSection.classList.remove('hidden');
+  slotsGrid.innerHTML = '<div class="slots-loading"><span class="material-icons-round spin">autorenew</span> Loading slots...</div>';
+  noSlots.classList.add('hidden');
+  state.selectedSlotId = null;
+  document.getElementById('toStep3Btn').disabled = true;
+
+  const res = await fetch(`${SLOTS_URL}?barber_id=${state.selectedBarberId}&date=${date}`);
+  const data = await res.json();
+
+  slotsGrid.innerHTML = '';
+  if (!data.slots || data.slots.length === 0) {
+    noSlots.classList.remove('hidden');
+    return;
+  }
+
+  data.slots.forEach(slot => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'slot-btn';
+    btn.dataset.id = slot.id;
+    btn.textContent = slot.start;
+    
+    if (slot.is_available) {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        state.selectedSlotId = slot.id;
+        state.selectedSlotLabel = `${datePicker.value} at ${slot.start}`;
+        document.getElementById('toStep3Btn').disabled = false;
+      });
+    } else {
+      btn.disabled = true;
+      btn.classList.add('unavailable');
+    }
+    
+    slotsGrid.appendChild(btn);
+  });
+}
+
+document.getElementById('toStep3Btn').addEventListener('click', () => {
+  // Fill summary
+  document.getElementById('summaryShop').textContent = state.selectedShopName;
+  document.getElementById('summaryService').textContent = state.selectedServiceName;
+  document.getElementById('summaryBarber').textContent = state.selectedBarberName;
+  document.getElementById('summarySlot').textContent = state.selectedSlotLabel;
+  document.getElementById('summaryPrice').textContent = state.selectedServicePrice;
+  // Fill hidden inputs
+  document.getElementById('hiddenSlotId').value = state.selectedSlotId;
+  document.getElementById('hiddenServiceId').value = state.selectedServiceId;
+  goToStep(3);
+});
+
+// ── Navigation ─────────────────────────────────────────────────
+document.getElementById('backToStep1Btn').addEventListener('click', () => goToStep(1));
+document.getElementById('backToStep2Btn').addEventListener('click', () => goToStep(2));
+
+function goToStep(n) {
+  [1, 2, 3].forEach(i => {
+    document.getElementById(`panelStep${i}`).classList.toggle('hidden', i !== n);
+    const ind = document.getElementById(`step${i}Indicator`);
+    ind.classList.remove('active', 'done');
+    if (i === n) ind.classList.add('active');
+    if (i < n) ind.classList.add('done');
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+{% endblock %}

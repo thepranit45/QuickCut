@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Barber Dashboard — QuickCut{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; min-height: 100vh; }
+.dashboard-header { margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; }
+.dash-title { font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 0.5rem; }
+.dash-subtitle { color: var(--muted); font-size: 1.1rem; }
+
+.dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+
+.dash-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; }
+.dash-card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+.dash-card-title .material-icons-round { color: var(--accent); }
+
+/* Appointments List */
+.apt-list { display: flex; flex-direction: column; gap: 1rem; }
+.apt-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; display: flex; justify-content: space-between; align-items: center; transition: border 0.2s; }
+.apt-item:hover { border-color: rgba(212,175,55,0.4); }
+.apt-info h4 { font-size: 1.1rem; margin-bottom: 0.2rem; }
+.apt-meta { color: var(--muted); font-size: 0.85rem; display: flex; gap: 1rem; margin-top: 0.5rem; }
+.apt-meta span { display: flex; align-items: center; gap: 0.3rem; }
+.apt-meta .material-icons-round { font-size: 1rem; color: var(--accent); }
+.apt-actions { display: flex; gap: 0.5rem; }
+
+.status-completed { color: var(--success); border-color: var(--success); background: rgba(16,185,129,0.1); }
+.status-cancelled { color: var(--danger); border-color: var(--danger); background: rgba(239,68,68,0.1); }
+
+/* Barber Stats / Info */
+.profile-summary { text-align: center; margin-bottom: 2rem; }
+.profile-avatar { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000; font-size: 2.5rem; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+.profile-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.profile-summary h3 { font-size: 1.3rem; }
+.profile-summary p { color: var(--accent); font-weight: 600; font-size: 0.9rem; }
+
+.stat-box { background: var(--bg3); padding: 1.2rem; border-radius: 12px; text-align: center; border: 1px solid var(--border); margin-bottom: 1rem; }
+.stat-box .num { font-size: 2rem; font-weight: 800; color: var(--accent); line-height: 1; margin-bottom: 0.3rem; }
+.stat-box .label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+@media (max-width: 900px) {
+  .dash-grid { grid-template-columns: 1fr; }
+  .apt-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .apt-actions { width: 100%; justify-content: flex-end; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+  <div class="dashboard-header">
+    <div>
+      <h1 class="dash-title">Welcome back, {{ barber.name.split.0 }}</h1>
+      <p class="dash-subtitle">{{ today|date:"l, F j, Y" }}</p>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+      <a href="{% url 'home' %}" class="btn btn-outline"><span class="material-icons-round">home</span> View Site</a>
+      <form action="{% url 'logout' %}" method="post" style="margin: 0;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost"><span class="material-icons-round">logout</span> Logout</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <!-- Main Content: Appointments -->
+    <div class="dash-main">
+      <div class="dash-card">
+        <h2 class="dash-card-title"><span class="material-icons-round">today</span> Today's Schedule</h2>
+        
+        <div class="apt-list">
+          {% for apt in today_appointments %}
+          <div class="apt-item">
+            <div class="apt-info">
+              <h4>{{ apt.customer_name }}</h4>
+              <div class="apt-meta">
+                <span><span class="material-icons-round">schedule</span> {{ apt.slot.start_time|time:"h:i A" }} - {{ apt.slot.end_time|time:"h:i A" }}</span>
+                <span><span class="material-icons-round">spa</span> {{ apt.service.name }}</span>
+              </div>
+              <div class="apt-meta" style="margin-top: 0.3rem;">
+                <span><span class="material-icons-round">phone</span> {{ apt.customer_phone }}</span>
+                {% if apt.notes %}<span><span class="material-icons-round">notes</span> {{ apt.notes }}</span>{% endif %}
+              </div>
+            </div>
+            
+            <div class="apt-actions">
+              {% if apt.status == 'confirmed' %}
+                <a href="{% url 'barber_action' apt.pk 'complete' %}" class="btn btn-primary btn-sm"><span class="material-icons-round">check</span> Complete</a>
+                <a href="{% url 'barber_action' apt.pk 'cancel' %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to cancel this appointment?')"><span class="material-icons-round">close</span> Cancel</a>
+              {% else %}
+                <div class="status-pill status-{{ apt.status }}" style="margin:0;">
+                  <span class="material-icons-round">
+                    {% if apt.status == 'completed' %}task_alt{% else %}cancel{% endif %}
+                  </span>
+                  {{ apt.get_status_display }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          {% empty %}
+          <p style="color: var(--muted); padding: 1rem 0;">No appointments scheduled for today. Enjoy your time! 🎉</p>
+          {% endfor %}
+        </div>
+      </div>
+      
+      <div class="dash-card" style="margin-top: 2rem;">
+        <h2 class="dash-card-title"><span class="material-icons-round">event</span> Upcoming Confirmed</h2>
+        <div class="apt-list">
+          {% for apt in upcoming_appointments %}
+          <div class="apt-item" style="padding: 1rem;">
+            <div class="apt-info">
+              <h4 style="font-size: 1rem;">{{ apt.customer_name }}</h4>
+              <div class="apt-meta">
+                <span><span class="material-icons-round">calendar_today</span> {{ apt.slot.date|date:"D, M j" }}</span>
+                <span><span class="material-icons-round">schedule</span> {{ apt.slot.start_time|time:"h:i A" }}</span>
+                <span><span class="material-icons-round">spa</span> {{ apt.service.name }}</span>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <p style="color: var(--muted); font-size: 0.9rem;">No upcoming appointments.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar: Profile & Stats -->
+    <div class="dash-sidebar">
+      <div class="dash-card">
+        <div class="profile-summary">
+          <div class="profile-avatar">
+            {% if barber.photo %}
+              <img src="{{ barber.photo.url }}" alt="{{ barber.name }}">
+            {% else %}
+              {{ barber.name|first }}
+            {% endif %}
+          </div>
+          <h3>{{ barber.name }}</h3>
+          <p>{{ barber.shop.name }}</p>
+        </div>
+        
+        <div class="stat-box">
+          <div class="num">{{ barber.rating }}</div>
+          <div class="label">Rating</div>
+        </div>
+        <div class="stat-box">
+          <div class="num">{{ today_appointments|length }}</div>
+          <div class="label">Today's Appointments</div>
+        </div>
+        <div class="stat-box">
+          <div class="num">{{ upcoming_appointments|length }}</div>
+          <div class="label">Upcoming Bookings</div>
+        </div>
+        
+        <hr style="border:0; border-top: 1px solid var(--border); margin: 1.5rem 0;" />
+        {% if barber.is_manager %}
+        <a href="{% url 'shop_rates' %}" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 1rem;">
+          <span class="material-icons-round">edit</span> Manage Shop Rates
+        </a>
+        <a href="{% url 'shop_slots' %}" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 1rem;">
+          <span class="material-icons-round">event_note</span> Manage Time Slots
+        </a>
+        <p style="color: var(--muted); font-size: 0.85rem; text-align: center; margin-bottom: 1.5rem;">You are viewing all appointments for {{ barber.shop.name }}.</p>
+        {% endif %}
+
+        <a href="{% url 'admin:index' %}" class="btn btn-outline" style="width: 100%; justify-content: center;">
+          <span class="material-icons-round">settings</span> Admin Settings
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
