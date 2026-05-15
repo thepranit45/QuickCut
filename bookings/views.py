@@ -58,6 +58,24 @@ def get_slots(request):
         date=date
     ).order_by('start_time')
 
+    # Auto-generate slots if none exist for this day (and it's not a past day)
+    if not slots.exists() and date >= timezone.localtime().date():
+        current = datetime.time(9, 0)
+        end = datetime.time(20, 0)
+        new_slots = []
+        while current < end:
+            start_dt = datetime.datetime.combine(date, current)
+            end_dt = start_dt + datetime.timedelta(minutes=30)
+            new_slots.append(TimeSlot(
+                barber=barber,
+                date=date,
+                start_time=current,
+                end_time=end_dt.time()
+            ))
+            current = end_dt.time()
+        TimeSlot.objects.bulk_create(new_slots)
+        slots = TimeSlot.objects.filter(barber=barber, date=date).order_by('start_time')
+
     # Filter out past slots
     now = timezone.now()
     available = []
@@ -313,6 +331,24 @@ def shop_slots(request):
         selected_barber = get_object_or_404(Barber, pk=selected_barber_id, shop=barber.shop)
         slots = TimeSlot.objects.filter(barber=selected_barber, date=selected_date).order_by('start_time')
 
+        # Auto-generate slots if none exist for this day
+        if not slots.exists() and selected_date >= timezone.localtime().date():
+            current = datetime.time(9, 0)
+            end = datetime.time(20, 0)
+            new_slots = []
+            while current < end:
+                start_dt = datetime.datetime.combine(selected_date, current)
+                end_dt = start_dt + datetime.timedelta(minutes=30)
+                new_slots.append(TimeSlot(
+                    barber=selected_barber,
+                    date=selected_date,
+                    start_time=current,
+                    end_time=end_dt.time()
+                ))
+                current = end_dt.time()
+            TimeSlot.objects.bulk_create(new_slots)
+            slots = TimeSlot.objects.filter(barber=selected_barber, date=selected_date).order_by('start_time')
+
         # Check for appointments
         slot_data = []
         for slot in slots:
@@ -325,34 +361,7 @@ def shop_slots(request):
 
     if request.method == 'POST':
         action = request.POST.get('action')
-        if action == 'generate' and selected_barber:
-            # Generate 9 AM to 8 PM slots
-            current = datetime.time(9, 0)
-            end = datetime.time(20, 0)
-            created_count = 0
-            while current < end:
-                start_dt = datetime.datetime.combine(selected_date, current)
-                end_dt = start_dt + datetime.timedelta(minutes=30)
-                slot_end = end_dt.time()
-
-                if not TimeSlot.objects.filter(barber=selected_barber, date=selected_date, start_time=current).exists():
-                    TimeSlot.objects.create(
-                        barber=selected_barber,
-                        date=selected_date,
-                        start_time=current,
-                        end_time=slot_end
-                    )
-                    created_count += 1
-                current = slot_end
-            
-            if created_count > 0:
-                messages.success(request, f"Generated {created_count} slots for {selected_barber.name} on {selected_date}.")
-            else:
-                messages.info(request, "Slots already exist for this day.")
-            
-            return redirect(f"{request.path}?barber_id={selected_barber_id}&date={selected_date_str}")
-            
-        elif action == 'toggle_block' and selected_barber:
+        if action == 'toggle_block' and selected_barber:
             slot_id = request.POST.get('slot_id')
             slot = get_object_or_404(TimeSlot, pk=slot_id, barber=selected_barber)
             

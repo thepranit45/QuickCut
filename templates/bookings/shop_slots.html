@@ -39,16 +39,6 @@
     
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
       <h3 style="font-size: 1.2rem;">Slots for {{ selected_barber.name }} on {{ selected_date }}</h3>
-      
-      {% if not slots %}
-      <form method="post" action="{% url 'shop_slots' %}?barber_id={{ selected_barber.id }}&date={{ selected_date }}" style="margin: 0;">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="generate" />
-        <button type="submit" class="btn btn-primary btn-sm">
-          <span class="material-icons-round">add_circle</span> Generate 9AM-8PM
-        </button>
-      </form>
-      {% endif %}
     </div>
 
     {% if slots %}
