@@ -31,6 +31,12 @@
       <li><a href="{% url 'services' %}" class="nav-link {% if request.resolver_match.url_name == 'services' %}active{% endif %}">Services</a></li>
       <li><a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">Our Team</a></li>
       <li><a href="{% url 'my_appointments' %}" class="nav-link {% if request.resolver_match.url_name == 'my_appointments' %}active{% endif %}">My Bookings</a></li>
+      <li class="mobile-cta-li">
+        <a href="{% url 'book' %}" class="btn btn-primary nav-mobile-cta">
+          <span class="material-icons-round">event_available</span>
+          Book Appointment
+        </a>
+      </li>
     </ul>
 
     <a href="{% url 'book' %}" class="btn btn-primary nav-cta">
@@ -43,6 +49,8 @@
     </button>
   </div>
 </nav>
+<div class="nav-overlay" id="navOverlay"></div>
+
 
 <!-- ── Flash Messages ──────────────────────────────────────────── -->
 {% if messages %}
