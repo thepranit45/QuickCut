@@ -5,22 +5,39 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'quickcut.settings')
 django.setup()
 
 from django.contrib.auth.models import User
-from bookings.models import Barber
+from bookings.models import Barber, Shop
 
 def setup_users():
-    for barber in Barber.objects.all():
-        username = barber.name.lower().replace(" ", "")
-        user, created = User.objects.get_or_create(username=username)
+    # 1. Main 'barber' account
+    user, created = User.objects.get_or_create(username='barber')
+    user.set_password('barber123')
+    user.is_staff = True
+    user.save()
+    
+    shop = Shop.objects.first()
+    barber, _ = Barber.objects.get_or_create(user=user, defaults={
+        'name': 'Barber Manager',
+        'shop': shop,
+        'is_manager': True,
+        'rating': 5.0,
+        'experience_years': 5
+    })
+    barber.is_manager = True
+    barber.save()
+    print("Main user 'barber' created with password 'barber123'.")
+
+    # 2. Existing barbers
+    for b in Barber.objects.all():
+        if b.user:
+            continue
+        username = b.name.lower().replace(" ", "")
+        u, created = User.objects.get_or_create(username=username)
         if created:
-            user.set_password('barber123')
-            user.save()
-            print(f"Created user {username} for {barber.name}")
-        else:
-            print(f"User {username} already exists")
-        
-        barber.user = user
-        barber.save()
-        print(f"Linked user {username} to {barber.name}")
+            u.set_password('barber123')
+            u.save()
+        b.user = u
+        b.save()
+        print(f"Linked user {username} to barber {b.name}")
 
 if __name__ == '__main__':
     setup_users()
